@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUNOCAT Link Collector</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐱 SUNOCAT Link Collector</h1>
+        </div>
+
+        <div class="stock-info">
+            <span class="label">📋 ストック:</span>
+            <span id="stockCount" class="count">0曲</span>
+        </div>
+
+        <button id="addBtn" class="btn-primary">
+            ➕ ストックに追加
+        </button>
+
+        <div id="linkList" class="link-list">
+            <!-- リンクがここに表示される -->
+        </div>
+
+        <div class="actions">
+            <button id="clearBtn" class="btn-secondary">
+                🗑️ 全削除
+            </button>
+            <button id="openPlayerBtn" class="btn-accent">
+                📤 SUNOCAT PLAYERで開く
+            </button>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
