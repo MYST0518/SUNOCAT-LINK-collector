@@ -1,11 +1,10 @@
 {
     "manifest_version": 3,
     "name": "SUNOCAT Link Collector",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "description": "Collect SUNO song links and paste them into SUNOCAT Player",
     "permissions": [
         "storage",
-        "clipboardRead",
         "activeTab",
         "scripting"
     ],
