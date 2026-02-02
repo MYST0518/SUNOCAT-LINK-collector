@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>SUNO CAT PLAYER</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#ff6b35">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SUNO Player">
+    <meta name="description" content="SUNOのAI音楽をプレイリストで楽しめるWebアプリ">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- LZ-String compression library for URL compression -->
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+
+    <link rel="stylesheet" href="/styles.css?v=3">
+</head>
+
+<body>
+    <!-- Offline Banner -->
+    <div class="offline-banner" id="offlineBanner" data-i18n="errorOffline">
+        ⚠️ オフラインです - インターネット接続を確認してください
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🎵</span>
+                <h1 data-i18n="appName">SUNO CAT PLAYER</h1>
+            </div>
+            <p class="tagline" data-i18n="appDescription">SUNOリンクをペーストして連続再生</p>
+
+            <div class="header-controls">
+                <!-- Theme Selector -->
+                <div class="theme-selector">
+                    <button class="theme-btn" id="themeBtn" title="🐈ネコを選ぶ" data-i18n="theme">
+                        🐈
+                    </button>
+                    <div class="theme-dropdown" id="themeDropdown">
+                        <button class="theme-option" data-theme="default">
+                            <span class="theme-icon">🐈‍⬛</span>
+                            <span data-i18n="themeDefault">ルナ（Dark）</span>
+                        </button>
+                        <button class="theme-option" data-theme="tabby">
+                            <span class="theme-icon">🐱</span>
+                            <span data-i18n="themeTabby">サニー（Light）</span>
+                        </button>
+                        <button class="theme-option" data-theme="sakura">
+                            <span class="theme-icon">🤍</span>
+                            <span data-i18n="themeSakura">サクラ（Pink）</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Language Selector -->
+                <div class="language-selector">
+                    <button class="language-btn" id="languageBtn" title="Language / 言語">
+                        🌐
+                    </button>
+                    <div class="language-dropdown" id="languageDropdown">
+                        <button class="language-option" data-lang="ja">
+                            🇯🇵 <span data-i18n="langJa">日本語</span>
+                        </button>
+                        <button class="language-option" data-lang="en">
+                            🇬🇧 <span data-i18n="langEn">English</span>
+                        </button>
+                        <button class="language-option" data-lang="zh">
+                            🇨🇳 <span data-i18n="langZh">中文</span>
+                        </button>
+                        <button class="language-option" data-lang="ko">
+                            🇰🇷 <span data-i18n="langKo">한국어</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading Progress Indicator -->
+        <div class="loading-progress" id="loadingProgress">
+            <div class="progress-text" id="progressText">読み込み中...</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section" id="inputSection">
+                <div class="input-header">
+                    <h2>
+                        <span data-i18n="inputTitle">📋 リンク入力</span>
+                        <button id="toggleInputBtn" class="btn-icon" title="折りたたむ">▲</button>
+                    </h2>
+                    <button id="loadBtn" class="btn btn-primary">
+                        <span>▶</span> <span data-i18n="loadPlaylistBtn">プレイリスト作成</span>
+                    </button>
+                </div>
+                <div class="input-content" id="inputContent">
+                    <textarea id="linksInput" data-i18n="inputPlaceholder"
+                        placeholder="SUNOのリンクをペースト（1行に1曲）&#10;&#10;例:&#10;https://suno.com/s/eeWo6s0axFZ7PYG6&#10;https://suno.com/song/36b02f3a-1d01-434e-a0a8-8ee9aa7fd693"></textarea>
+                </div>
+            </section>
+
+            <!-- Player Section -->
+            <section class="player-section">
+                <div class="now-playing" id="nowPlaying">
+                    <div class="album-art">🎵</div>
+                    <div class="track-info">
+                        <div class="track-title" id="trackTitle">準備完了</div>
+                        <div class="track-artist" id="trackArtist">リンクを入力してください</div>
+                    </div>
+                    <div class="track-actions">
+                        <a href="#" class="action-btn link-btn" id="openSunoBtn" target="_blank" title="SUNO">
+                            <span data-i18n="openInSuno">SUNO</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <span class="time" id="currentTime">0:00</span>
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <span class="time" id="duration">0:00</span>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls">
+                    <button class="control-btn" id="shuffleBtn" title="シャッフル">
+                        <span id="shuffleIcon">🔀</span>
+                    </button>
+                    <button class="control-btn" id="seekBackBtn" title="5秒戻る (←)">
+                        <span>⏪</span>
+                    </button>
+                    <button class="control-btn" id="prevBtn" title="前の曲 (P)">
+                        <span>⏮</span>
+                    </button>
+                    <button class="control-btn play-btn" id="playBtn" title="再生/一時停止 (Space)">
+                        <span id="playIcon">▶</span>
+                    </button>
+                    <button class="control-btn" id="nextBtn" title="次の曲 (N)">
+                        <span>⏭</span>
+                    </button>
+                    <button class="control-btn" id="seekForwardBtn" title="5秒進む (→)">
+                        <span>⏩</span>
+                    </button>
+                    <button class="control-btn" id="repeatBtn" title="リピート">
+                        <span id="repeatIcon">🔁</span>
+                    </button>
+                </div>
+
+                <!-- Volume -->
+                <div class="volume-container">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                </div>
+            </section>
+
+            <!-- Playlist Section -->
+            <section class="playlist-section">
+                <div class="playlist-header">
+                    <h2><span data-i18n="playlistTitle">📜 プレイリスト</span></h2>
+                    <div class="playlist-actions">
+                        <button id="historyBtn" class="btn btn-secondary" title="履歴">
+                            📜
+                        </button>
+                        <button id="clearBtn" class="btn btn-secondary" title="クリア">
+                            🗑️
+                        </button>
+                        <button id="importBtn" class="btn btn-secondary" title="インポート">
+                            📥
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <button id="downloadBtn" class="btn btn-secondary" title="ダウンロード">
+                            💾
+                        </button>
+                        <div class="share-container">
+                            <button id="shareBtn" class="btn btn-share" title="プレイリストを共有">
+                                🔗 <span data-i18n="share">共有</span>
+                            </button>
+                            <div class="share-dropdown" id="shareDropdown">
+                                <button class="share-option" id="shareTwitter" title="X (Twitter)で共有">
+                                    <span class="share-icon">𝕏</span>
+                                    <span>X (Twitter)</span>
+                                </button>
+                                <button class="share-option" id="shareLine" title="LINEで共有">
+                                    <span class="share-icon">💬</span>
+                                    <span>LINE</span>
+                                </button>
+                                <button class="share-option" id="shareFacebook" title="Facebookで共有">
+                                    <span class="share-icon">📘</span>
+                                    <span>Facebook</span>
+                                </button>
+                                <button class="share-option" id="shareCopy" title="URLをコピー">
+                                    <span class="share-icon">📋</span>
+                                    <span>URLコピー</span>
+                                </button>
+                            </div>
+                        </div>
+                        <span class="track-count" id="trackCount">0曲</span>
+                    </div>
+                </div>
+                <div class="playlist" id="playlist">
+                    <div class="empty-playlist">
+                        <span class="empty-icon">🎶</span>
+                        <p>プレイリストが空です</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Hidden Audio Element -->
+        <audio id="audioPlayer"></audio>
+
+        <!-- Toast -->
+        <div id="toast" class="toast"></div>
+
+        <!-- Donate Button -->
+        <button class="donate-btn-float" id="donateBtn" title="Support">
+            <span class="donate-icon">❤️</span>
+        </button>
+
+        <!-- Help Button -->
+        <button class="help-btn" id="helpBtn" title="キーボードショートカット">
+            ⌨️
+        </button>
+
+        <!-- Help Modal -->
+        <div class="help-modal" id="helpModal">
+            <div class="help-content">
+                <h3 data-i18n="helpTitle">📖 ヘルプ</h3>
+
+                <!-- Tabs -->
+                <div class="help-tabs">
+                    <button class="help-tab active" data-tab="shortcuts"><span data-i18n="shortcutsTab">⌨️
+                            ショートカット</span></button>
+                    <button class="help-tab" data-tab="usage"><span data-i18n="usageTab">📝 使い方</span></button>
+                </div>
+
+                <!-- Shortcuts Tab -->
+                <div class="help-tab-content active" id="shortcutsTab">
+                    <div class="shortcut-list">
+                        <div class="shortcut-item">
+                            <kbd data-i18n="keySpace">Space</kbd>
+                            <span data-i18n="actionPlay">再生/停止</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd data-i18n="keyN">N</kbd>
+                            <span data-i18n="actionNext">次の曲</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd data-i18n="keyP">P</kbd>
+                            <span data-i18n="actionPrev">前の曲</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd data-i18n="keyLeft">←</kbd>
+                            <span data-i18n="actionSeekBack">5秒戻る</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd data-i18n="keyRight">→</kbd>
+                            <span data-i18n="actionSeekForward">5秒進む</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd data-i18n="keyM">M</kbd>
+                            <span data-i18n="actionMute">ミュート</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Usage Tab -->
+                <div class="help-tab-content" id="usageTab">
+                    <div class="usage-guide">
+                        <div class="usage-section">
+                            <h4 data-i18n="usageCreateTitle">🎵 プレイリストの作り方</h4>
+                            <ol>
+                                <li data-i18n="usageCreateStep1"></li>
+                                <li data-i18n="usageCreateStep2"></li>
+                                <li data-i18n="usageCreateStep3"></li>
+                            </ol>
+                        </div>
+
+                        <div class="usage-section">
+                            <h4 data-i18n="usageShareTitle">🔗 共有する</h4>
+                            <p data-i18n="usageShareDesc"></p>
+                            <ul>
+                                <li data-i18n="usageShareTwitter"></li>
+                                <li data-i18n="usageShareLine"></li>
+                                <li data-i18n="usageShareFacebook"></li>
+                                <li data-i18n="usageShareUrl"></li>
+                            </ul>
+                        </div>
+
+                        <div class="usage-section">
+                            <h4 data-i18n="usageSaveTitle">💾 保存と復元</h4>
+                            <ul>
+                                <li data-i18n="usageSaveDownload"></li>
+                                <li data-i18n="usageSaveImport"></li>
+                                <li data-i18n="usageSaveHistory"></li>
+                            </ul>
+                        </div>
+
+                        <div class="usage-section">
+                            <h4 data-i18n="usageFeaturesTitle">🎮 便利な機能</h4>
+                            <ul>
+                                <li data-i18n="usageFeatureShuffle"></li>
+                                <li data-i18n="usageFeatureRepeat"></li>
+                                <li data-i18n="usageFeatureFavorite"></li>
+                                <li data-i18n="usageFeatureOpenInSuno"></li>
+                                <li data-i18n="usageFeatureTheme"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="help-footer">
+                    <button class="donate-btn-help" id="helpDonateBtn">
+                        <span class="donate-icon">❤️</span>
+                        <span data-i18n="donateSupport">開発を応援する</span>
+                    </button>
+                    <button class="btn btn-primary" id="closeHelpBtn" data-i18n="close">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donate Modal -->
+        <div class="donate-modal" id="donateModal">
+            <div class="donate-content">
+                <h3 data-i18n="donateSelectTitle">応援方法を選んでね🐾</h3>
+                <div class="donate-options">
+                    <a href="https://www.buymeacoffee.com/miya_myst" target="_blank" class="donate-option-btn bmac"
+                        id="bmacLink">
+                        <span class="option-icon">☕</span>
+                        <span data-i18n="donateTreat">🐾 猫におやつをあげる</span>
+                    </a>
+                    <a href="https://www.amazon.jp/hz/wishlist/ls/1L2SU64VCU5N2?ref_=wl_share" target="_blank"
+                        class="donate-option-btn wishlist" id="wishlistLink">
+                        <span class="option-icon">🎁</span>
+                        <span data-i18n="donateWishlist">🎁 ほしい物リスト</span>
+                    </a>
+                </div>
+                <button class="btn-close-modal" id="closeDonateBtn">✕</button>
+            </div>
+        </div>
+
+        <!-- History Modal -->
+        <div class="history-modal" id="historyModal">
+            <div class="history-content">
+                <div class="history-header">
+                    <h3 data-i18n="historyTitle">📜 プレイリスト履歴</h3>
+                    <button class="btn-close" id="closeHistoryBtn">✕</button>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Translations MUST load before app.js -->
+    <script src="/translations.js?v=3"></script>
+    <script src="/app.js?v=3"></script>
+</body>
+
+</html>
