@@ -1,6 +1,6 @@
 // ストレージキー
 const STORAGE_KEY = 'sunocat_links';
-const SUNOCAT_PLAYER_URL = 'https://suno-playlist.vercel.app/';
+const SUNOCAT_PLAYER_URL = 'https://sunocatplayer.coedo-music.jp/';
 
 // DOM要素
 const addBtn = document.getElementById('addBtn');
